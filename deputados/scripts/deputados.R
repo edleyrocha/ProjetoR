@@ -22,14 +22,38 @@ setwd("D:/GIT/ProjetoR/R/deputados");
 # 2 - Importar Base de Dados DEPUTADOS ----------------------------------------
 
 library(readr);
-deputados <- read_delim("D:/GIT/ProjetoR/R/deputados/dados/deputados.csv",";", escape_double = FALSE, trim_ws = TRUE);
+deputados <- read_delim("D:/GIT/deputados.csv",";", escape_double = FALSE, trim_ws = TRUE);
 View(deputados);
 
+
+library(readr)
+deputados <- read_delim("D:/GIT/deputados.csv", ";", escape_double = FALSE, trim_ws = TRUE)
+View(deputados)
+
+library(readr)
+deputados <- read_csv("D:/GIT/deputados.csv")
+View(deputados)
+
+
+
 # Lista Estados
-unique(deputados$sgUF);
+unique(deputados$sgUF)
 # Lista Partidos
-unique(deputados$sgPartido);
+unique(deputados$sgPartido)
 # Lista Deputados
-unique(deputados$txNomeParlamentar);
+unique(deputados$txNomeParlamentar)
+unique(deputados$txNomeParlamentar, deputados$sgPartido)
+# correcao das casa decimais
+deputados$vlrLiquido <-  sub(",",".",deputados$vlrLiquido)
+deputados$vlrLiquido <- as.double(deputados$vlrLiquido)
+#view valores
+deputados$vlrLiquido
+#LISTA tipo de dados
+is(deputados$vlrLiquido)
+deputados$vlrLiquido
+max(deputados$vlrLiquido)
+min(deputados$vlrLiquido)
+
+
 
 
