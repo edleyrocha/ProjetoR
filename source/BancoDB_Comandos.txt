@@ -1,0 +1,84 @@
+
+#CRIAR BANCO VIA CMD
+sqlite3.exe deputados.sqlite3
+
+-- COMANDO USADO PARA CRIAR TABELA DEPUTADO
+-- APAGAR TABELA [deputados];
+DROP TABLE [deputados];
+-- CRIAR TABLE [deputados];
+CREATE TABLE [deputados] (
+	[txNomeParlamentar]         [TEXT],
+	[idecadastro]               [INTEGER],
+	[nuCarteiraParlamentar]     [INTEGER],
+	[nuLegislatura]             [INTEGER],
+	[sgUF]                      [TEXT],
+	[sgPartido]                 [TEXT],
+	[codLegislatura]            [INTEGER],
+	[numSubCota]                [INTEGER],
+	[txtDescricao]              [TEXT],
+	[numEspecificacaoSubCota]   [INTEGER],
+	[txtDescricaoEspecificacao] [TEXT],
+	[txtFornecedor]             [TEXT],
+	[txtCNPJCPF]                [TEXT],
+	[txtNumero]                 [TEXT],
+	[indTipoDocumento]          [INTEGER],
+	[datEmissao]                [TEXT],
+	[vlrDocumento]              [DOUBLE],
+	[vlrGlosa]                  [DOUBLE],
+	[vlrLiquido]                [DOUBLE],
+	[numMes]                    [INTEGER],
+	[numAno]                    [INTEGER],
+	[numParcela]                [INTEGER],
+	[txtPassageiro]             [TEXT],
+	[txtTrecho]                 [TEXT],
+	[numLote]                   [INTEGER],
+	[numRessarcimento]          [INTEGER],
+	[vlrRestituicao]            [DOUBLE],
+	[nuDeputadoId]              [INTEGER],
+	[ideDocumento]              [INTEGER]
+);
+-- SEPARADOR COM PONTO E VIRGURLA 
+-- IMPORTAR CSV PARA TABELA [deputados];
+.separator ";"
+.import Ano-2015.csv deputados 
+.import Ano-2016.csv deputados 
+-- TOTAL: 376301+357709 = 734010
+SELECT MAX([ROWID]) AS [TOTAL_CADASTROS] FROM [DEPUTADOS]; 
+
+-- CORRIGIR LINHA TEXTO ERRADAS
+SELECT ROWID as [AUTO_ID], ([vlrLiquido]) AS [VALOR_ERRADO] FROM [DEPUTADOS] WHERE vlrLiquido = 'vlrLiquido'; -- 1 e 376302
+SELECT ([vlrLiquido]) AS [VALOR_ERRADO] FROM [DEPUTADOS] where rowid = 1;
+SELECT ([vlrLiquido]) AS [VALOR_ERRADO] FROM [DEPUTADOS] where rowid = 376302;
+
+DELETE FROM [DEPUTADOS] WHERE vlrLiquido == (SELECT([vlrLiquido]) AS [vlrLiquido] FROM [DEPUTADOS] WHERE vlrLiquido = 'vlrLiquido');
+
+-- CORRIGIR VALOR NEGATIVO 
+
+ -- total 5234 campos negativos
+select  count([vlrLiquido]) AS [VALOR_LIQ_NEGATIVO] from  [DEPUTADOS] where [vlrLiquido] < 0;
+
+-- Listar Campos Negativos
+select [vlrLiquido] AS [VALOR_LIQ_NEGATIVO] from  [DEPUTADOS] where [vlrLiquido] < 0;
+
+-- Campos corrigidos via select Modo 1
+select -CAST(REPLACE(REPLACE([vlrLiquido], '.', ''), ',', '.') AS DECIMAL(10, 2)) AS [VALOR_LIQ_NEGATIVO]  from  [DEPUTADOS] where [vlrLiquido] < 0;
+
+-- Campos corrigidos via select Modo 2
+select -1 * REPLACE(REPLACE([vlrLiquido], '.', ''), ',', '.') AS [VALOR_LIQ_NEGATIVO] from [DEPUTADOS]  where [vlrLiquido] < 0;
+
+-- Compos atualizados para Positivos
+UPDATE [DEPUTADOS] SET [vlrLiquido] = (-1 * REPLACE(REPLACE([vlrLiquido], '.', ''), ',', '.'))  where [vlrLiquido] < 0; 
+
+
+
+
+
+
+-- EXPORTAR PARA CVS BANCO DE DADOS (nao ficou legal eu nao gostei -- usei sqlite Studio -- no final fica igual mesma bosta)
+.separator ";"
+.headers on
+.mode csv
+.output deputados.csv
+.separator ";"
+SELECT * FROM [DEPUTADOS];
+.quit
