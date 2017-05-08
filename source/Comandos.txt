@@ -1,0 +1,142 @@
+
+#CRIAR BANCO VIA CMD
+sqlite3.exe deputados.sqlite3
+
+-- COMANDO USADO PARA CRIAR TABELA DEPUTADO
+
+-- APAGAR TABELA [deputados];
+DROP TABLE IF EXISTS [deputados];
+
+-- CRIAR TABLE [deputados];
+CREATE TABLE [deputados] (
+	[txNomeParlamentar]         [TEXT],
+	[idecadastro]               [INTEGER],
+	[nuCarteiraParlamentar]     [INTEGER],
+	[nuLegislatura]             [INTEGER],
+	[sgUF]                      [TEXT],
+	[sgPartido]                 [TEXT],
+	[codLegislatura]            [INTEGER],
+	[numSubCota]                [INTEGER],
+	[txtDescricao]              [TEXT],
+	[numEspecificacaoSubCota]   [INTEGER],
+	[txtDescricaoEspecificacao] [TEXT],
+	[txtFornecedor]             [TEXT],
+	[txtCNPJCPF]                [TEXT],
+	[txtNumero]                 [TEXT],
+	[indTipoDocumento]          [INTEGER],
+	[datEmissao]                [TEXT],
+	[vlrDocumento]              [DOUBLE],
+	[vlrGlosa]                  [DOUBLE],
+	[vlrLiquido]                [DOUBLE],
+	[numMes]                    [INTEGER],
+	[numAno]                    [INTEGER],
+	[numParcela]                [INTEGER],
+	[txtPassageiro]             [TEXT],
+	[txtTrecho]                 [TEXT],
+	[numLote]                   [INTEGER],
+	[numRessarcimento]          [INTEGER],
+	[vlrRestituicao]            [DOUBLE],
+	[nuDeputadoId]              [INTEGER],
+	[ideDocumento]              [INTEGER]
+);
+-- SEPARADOR PONTO E VIRGURLA ( ; )
+.separator ";"
+
+-- IMPORTAR CSV PARA -> [deputados];
+.import Ano-2015.csv deputados
+.import Ano-2016.csv deputados
+
+-- TOTAL: 376301+357709 = 734010
+SELECT MAX([ROWID]) AS [TOTAL_CADASTROS] FROM [DEPUTADOS]; 
+
+-- CORRIGIR LINHA TEXTO ERRADAS
+-- SELECT ROWID AS [AUTO_ID], [vlrLiquido] AS [VALOR_ERRADO] FROM [DEPUTADOS] WHERE [vlrLiquido] = ('vlrLiquido'); -- 1 e 376302
+-- SELECT ([vlrLiquido]) AS [VALOR_ERRADO] FROM [DEPUTADOS] where rowid = 1;
+-- SELECT ([vlrLiquido]) AS [VALOR_ERRADO] FROM [DEPUTADOS] where rowid = 376302;
+
+DELETE FROM [DEPUTADOS] WHERE [vlrLiquido] == (SELECT ([vlrLiquido]) AS [vlrLiquido] FROM [DEPUTADOS] WHERE [vlrLiquido] = ('vlrLiquido'));
+
+-- TOTAL 734010 - 2 = 734008
+SELECT COUNT(*) AS [TOTAL] FROM [DEPUTADOS];
+
+-- CORRIGIR VALOR NEGATIVO 
+
+-- total 5234 campos negativos
+-- select  count([vlrLiquido]) AS [VALOR_LIQ_NEGATIVO] from  [DEPUTADOS] where [vlrLiquido] < 0;
+
+-- Listar Campos Negativos
+-- select [vlrLiquido] AS [VALOR_LIQ_NEGATIVO] from  [DEPUTADOS] where [vlrLiquido] < 0;
+
+-- Campos corrigidos via select Modo 1
+-- select -CAST(REPLACE(REPLACE([vlrLiquido], '.', ''), ',', '.') AS DECIMAL(10, 2)) AS [VALOR_LIQ_NEGATIVO]  from  [DEPUTADOS] where [vlrLiquido] < 0;
+
+-- Campos corrigidos via select Modo 2
+-- select -1 * REPLACE(REPLACE([vlrLiquido], '.', ''), ',', '.') AS [VALOR_LIQ_NEGATIVO] from [DEPUTADOS]  where [vlrLiquido] < 0;
+
+-- Compos atualizados para Positivos
+UPDATE [DEPUTADOS] SET [vlrLiquido] = (-1 * REPLACE(REPLACE([vlrLiquido], '.', ''), ',', '.'))  where [vlrLiquido] < 0; 
+
+-- APAGAR LINHAS DE GASTOS DE PARTIDOS BY LEONARDO
+-- SELECT DISTINCT [txNomeParlamentar] FROM DEPUTADOS;
+DELETE FROM DEPUTADOS WHERE [txNomeParlamentar] IN ('PTN', 'PSOL', 'PHS', 'LID.GOV-CD', 'SDD', 'PROS', 'PDT', 'LIDERANÇA DO PSDB', 'LIDERANÇA DO PT');
+
+-- DELETAR TABELA[genero]
+-- CRIAR TABELA [genero]
+-- SEPARADOR PONTO E VIRGURLA ( ; )
+-- IMPORTAR TABELA [genero] pelo arquivo CSV: "genero.csv"
+
+DROP TABLE IF EXISTS [genero];
+CREATE TABLE genero (
+    [nome]   VARCHAR (255),
+    [genero] CHAR    (1) 
+);
+.separator ";"
+.import genero.csv genero 
+
+
+
+-- CRIAR COLUNA "GENERO" char(1) NA TABELA "DEPUTADOS"
+-- ATUALIZAR O REGISTROS.
+-- APAGAR A TABELA "GENERO" E EXPORTAR NOVAMENTE O BANCO DE DADOS PRA CSV
+ALTER TABLE [deputados] ADD COLUMN [genero] CHAR(1);
+UPDATE [DEPUTADOS] SET [genero] = (SELECT [G].[genero] FROM [genero] AS [G] WHERE [G].[nome] = ([deputados].[txNomeParlamentar]));
+DROP TABLE IF EXISTS [genero];
+
+-- CRIAR COLUNA ORIGEM CHAR 3,  DESTINO_1 CHAR 3, DESTINO_2 CHAR 3, DESTINO_3 CHAR 3, DESTINO_4 CHAR 3
+ALTER TABLE [deputados] ADD COLUMN [origem] CHAR(3);
+ALTER TABLE [deputados] ADD COLUMN [destino_1] CHAR(3);
+ALTER TABLE [deputados] ADD COLUMN [destino_2] CHAR(3);
+ALTER TABLE [deputados] ADD COLUMN [destino_3] CHAR(3);
+ALTER TABLE [deputados] ADD COLUMN [destino_4] CHAR(3);
+
+-- UPDATE COLUNAS CRIADAS
+UPDATE [deputados] SET [origem]    = SUBSTR([txtTrecho],1,3)  WHERE [txtDescricao] = ('Emissão Bilhete Aéreo');
+UPDATE [deputados] SET [destino_1] = SUBSTR([txtTrecho],5,3)  WHERE [txtDescricao] = ('Emissão Bilhete Aéreo');
+UPDATE [deputados] SET [destino_2] = SUBSTR([txtTrecho],9,3)  WHERE [txtDescricao] = ('Emissão Bilhete Aéreo');
+UPDATE [deputados] SET [destino_3] = SUBSTR([txtTrecho],13,3) WHERE [txtDescricao] = ('Emissão Bilhete Aéreo');
+UPDATE [deputados] SET [destino_4] = SUBSTR([txtTrecho],17,3) WHERE [txtDescricao] = ('Emissão Bilhete Aéreo');
+-- UPDATE CAMPOS "" COM NULL
+UPDATE [deputados] SET [origem]   	  = NULL WHERE [origem] = ('');
+UPDATE [deputados] SET [destino_1]    = NULL WHERE [destino_1] = ('');
+UPDATE [deputados] SET [destino_2]    = NULL WHERE [destino_2] = ('');
+UPDATE [deputados] SET [destino_3]    = NULL WHERE [destino_3] = ('');
+UPDATE [deputados] SET [destino_4]    = NULL WHERE [destino_4] = ('');
+
+--T0TAL 732388
+SELECT COUNT(*) AS [TOTAL] FROM [DEPUTADOS];
+
+
+
+
+
+
+
+
+-- EXPORTAR PARA CVS BANCO DE DADOS (nao ficou legal eu nao gostei -- usei sqlite Studio -- no final fica igual mesma bosta)
+.separator ";"
+.headers on
+.mode csv
+.output deputados.csv
+.separator ";"
+SELECT * FROM [DEPUTADOS];
+.quit

@@ -1,0 +1,68 @@
+DROP TABLE IF EXISTS [deputados];
+CREATE TABLE [deputados] (
+	[txNomeParlamentar]         [TEXT],
+	[idecadastro]               [INTEGER],
+	[nuCarteiraParlamentar]     [INTEGER],
+	[nuLegislatura]             [INTEGER],
+	[sgUF]                      [TEXT],
+	[sgPartido]                 [TEXT],
+	[codLegislatura]            [INTEGER],
+	[numSubCota]                [INTEGER],
+	[txtDescricao]              [TEXT],
+	[numEspecificacaoSubCota]   [INTEGER],
+	[txtDescricaoEspecificacao] [TEXT],
+	[txtFornecedor]             [TEXT],
+	[txtCNPJCPF]                [TEXT],
+	[txtNumero]                 [TEXT],
+	[indTipoDocumento]          [INTEGER],
+	[datEmissao]                [TEXT],
+	[vlrDocumento]              [DOUBLE],
+	[vlrGlosa]                  [DOUBLE],
+	[vlrLiquido]                [DOUBLE],
+	[numMes]                    [INTEGER],
+	[numAno]                    [INTEGER],
+	[numParcela]                [INTEGER],
+	[txtPassageiro]             [TEXT],
+	[txtTrecho]                 [TEXT],
+	[numLote]                   [INTEGER],
+	[numRessarcimento]          [INTEGER],
+	[vlrRestituicao]            [DOUBLE],
+	[nuDeputadoId]              [INTEGER],
+	[ideDocumento]              [INTEGER]
+);
+.separator ";"
+.import Ano-2015.csv deputados
+.import Ano-2016.csv deputados
+DELETE FROM [DEPUTADOS] WHERE [vlrLiquido] == (SELECT ([vlrLiquido]) AS [vlrLiquido] FROM [DEPUTADOS] WHERE [vlrLiquido] = ('vlrLiquido'));
+UPDATE [DEPUTADOS] SET [vlrLiquido] = (-1 * REPLACE(REPLACE([vlrLiquido], '.', ''), ',', '.'))  where [vlrLiquido] < 0; 
+DELETE FROM DEPUTADOS WHERE [txNomeParlamentar] IN ('PTN', 'PSOL', 'PHS', 'LID.GOV-CD', 'SDD', 'PROS', 'PDT', 'LIDERANÇA DO PSDB', 'LIDERANÇA DO PT');
+DROP TABLE IF EXISTS [genero];
+CREATE TABLE genero (
+    [nome]   VARCHAR (255),
+    [genero] CHAR    (1) 
+);
+.import genero.csv genero 
+ALTER TABLE [deputados] ADD COLUMN [genero] CHAR(1);
+UPDATE [DEPUTADOS] SET [genero] = (SELECT [G].[genero] FROM [genero] AS [G] WHERE [G].[nome] = ([deputados].[txNomeParlamentar]));
+DROP TABLE IF EXISTS [genero];
+ALTER TABLE [deputados] ADD COLUMN [origem] CHAR(3);
+ALTER TABLE [deputados] ADD COLUMN [destino_1] CHAR(3);
+ALTER TABLE [deputados] ADD COLUMN [destino_2] CHAR(3);
+ALTER TABLE [deputados] ADD COLUMN [destino_3] CHAR(3);
+ALTER TABLE [deputados] ADD COLUMN [destino_4] CHAR(3);
+UPDATE [deputados] SET [origem]    = SUBSTR([txtTrecho],1,3)  WHERE [txtDescricao] = ('Emissão Bilhete Aéreo');
+UPDATE [deputados] SET [destino_1] = SUBSTR([txtTrecho],5,3)  WHERE [txtDescricao] = ('Emissão Bilhete Aéreo');
+UPDATE [deputados] SET [destino_2] = SUBSTR([txtTrecho],9,3)  WHERE [txtDescricao] = ('Emissão Bilhete Aéreo');
+UPDATE [deputados] SET [destino_3] = SUBSTR([txtTrecho],13,3) WHERE [txtDescricao] = ('Emissão Bilhete Aéreo');
+UPDATE [deputados] SET [destino_4] = SUBSTR([txtTrecho],17,3) WHERE [txtDescricao] = ('Emissão Bilhete Aéreo');
+UPDATE [deputados] SET [origem]   	  = NULL WHERE [origem] = ('');
+UPDATE [deputados] SET [destino_1]    = NULL WHERE [destino_1] = ('');
+UPDATE [deputados] SET [destino_2]    = NULL WHERE [destino_2] = ('');
+UPDATE [deputados] SET [destino_3]    = NULL WHERE [destino_3] = ('');
+UPDATE [deputados] SET [destino_4]    = NULL WHERE [destino_4] = ('');
+SELECT COUNT(*) AS [TOTAL] FROM [DEPUTADOS];
+
+
+
+
+
