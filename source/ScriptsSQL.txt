@@ -38,12 +38,12 @@ UPDATE [DEPUTADOS] SET [vlrLiquido] = (-1 * REPLACE(REPLACE([vlrLiquido], '.', '
 DELETE FROM DEPUTADOS WHERE [txNomeParlamentar] IN ('PTN', 'PSOL', 'PHS', 'LID.GOV-CD', 'SDD', 'PROS', 'PDT', 'LIDERANÇA DO PSDB', 'LIDERANÇA DO PT');
 DROP TABLE IF EXISTS [genero];
 CREATE TABLE genero (
-    [nome]   VARCHAR (255),
-    [genero] CHAR    (1) 
+    [nome]   TEXT,
+    [genero] CHAR(1) 
 );
 .import genero.csv genero 
 ALTER TABLE [deputados] ADD COLUMN [genero] CHAR(1);
-UPDATE [DEPUTADOS] SET [genero] = (SELECT [G].[genero] FROM [genero] AS [G] WHERE [G].[nome] = ([deputados].[txNomeParlamentar]));
+UPDATE [DEPUTADOS] SET [genero] = (SELECT [G].[genero] FROM [genero] AS [G] WHERE TRIM([G].[nome]) = TRIM([deputados].[txNomeParlamentar]));
 DROP TABLE IF EXISTS [genero];
 ALTER TABLE [deputados] ADD COLUMN [origem] CHAR(3);
 ALTER TABLE [deputados] ADD COLUMN [destino_1] CHAR(3);
@@ -60,6 +60,7 @@ UPDATE [deputados] SET [destino_1]    = NULL WHERE [destino_1] = ('');
 UPDATE [deputados] SET [destino_2]    = NULL WHERE [destino_2] = ('');
 UPDATE [deputados] SET [destino_3]    = NULL WHERE [destino_3] = ('');
 UPDATE [deputados] SET [destino_4]    = NULL WHERE [destino_4] = ('');
+VACUUM;
 SELECT COUNT(*) AS [TOTAL] FROM [DEPUTADOS];
 
 

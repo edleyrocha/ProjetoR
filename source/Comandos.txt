@@ -87,7 +87,7 @@ DELETE FROM DEPUTADOS WHERE [txNomeParlamentar] IN ('PTN', 'PSOL', 'PHS', 'LID.G
 
 DROP TABLE IF EXISTS [genero];
 CREATE TABLE genero (
-    [nome]   VARCHAR (255),
+    [nome]   TEXT,
     [genero] CHAR    (1) 
 );
 .separator ";"
@@ -99,7 +99,7 @@ CREATE TABLE genero (
 -- ATUALIZAR O REGISTROS.
 -- APAGAR A TABELA "GENERO" E EXPORTAR NOVAMENTE O BANCO DE DADOS PRA CSV
 ALTER TABLE [deputados] ADD COLUMN [genero] CHAR(1);
-UPDATE [DEPUTADOS] SET [genero] = (SELECT [G].[genero] FROM [genero] AS [G] WHERE [G].[nome] = ([deputados].[txNomeParlamentar]));
+UPDATE [DEPUTADOS] SET [genero] = (SELECT [G].[genero] FROM [genero] AS [G] WHERE TRIM([G].[nome]) = TRIM([deputados].[txNomeParlamentar]));
 DROP TABLE IF EXISTS [genero];
 
 -- CRIAR COLUNA ORIGEM CHAR 3,  DESTINO_1 CHAR 3, DESTINO_2 CHAR 3, DESTINO_3 CHAR 3, DESTINO_4 CHAR 3
@@ -122,12 +122,11 @@ UPDATE [deputados] SET [destino_2]    = NULL WHERE [destino_2] = ('');
 UPDATE [deputados] SET [destino_3]    = NULL WHERE [destino_3] = ('');
 UPDATE [deputados] SET [destino_4]    = NULL WHERE [destino_4] = ('');
 
+-- REDUZIR BANCO DE DADOS 
+VACUUM;
+
 --T0TAL 732388
 SELECT COUNT(*) AS [TOTAL] FROM [DEPUTADOS];
-
-
-
-
 
 
 
